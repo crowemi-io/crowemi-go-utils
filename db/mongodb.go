@@ -9,7 +9,7 @@ import (
 )
 
 type MongoClient struct {
-	Database    string
+	Database    *mongo.Database
 	MongoClient *mongo.Client
 }
 
@@ -23,7 +23,7 @@ func (mc *MongoClient) Connect(ctx context.Context, uri string, database string)
 		return err
 	}
 	mc.MongoClient = client
-	mc.Database = database
+	mc.Database = client.Database(database)
 	return nil
 }
 func (mc *MongoClient) Disconnect() error {
@@ -37,9 +37,9 @@ func FilterDocument(filter map[string]string) bson.D {
 	}
 	return bsonFilters
 }
-func GetOne[T any](client MongoClient, collection string, filter map[string]string) (T, error) {
-	c := client.MongoClient.Database(client.Database).Collection(collection)
-	result := c.FindOne(context.TODO(), FilterDocument(filter))
+func GetOne[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string) (T, error) {
+	c := client.Database.Collection(collection)
+	result := c.FindOne(ctx, FilterDocument(filter))
 	var ret T
 	err := result.Decode(&ret)
 	if err != nil {
@@ -47,24 +47,70 @@ func GetOne[T any](client MongoClient, collection string, filter map[string]stri
 	}
 	return ret, nil
 }
-func GetMany[T any](client MongoClient, collection string, filter map[string]string) ([]T, error) {
-	c := client.MongoClient.Database(client.Database).Collection(collection)
-	crsr, err := c.Find(context.TODO(), FilterDocument(filter))
+func GetMany[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string) ([]T, error) {
+	c := client.Database.Collection(collection)
+	crsr, err := c.Find(ctx, FilterDocument(filter))
 	if err != nil {
 		return nil, err
 	}
+	defer crsr.Close(ctx)
 
 	var ret []T
-	err = crsr.All(context.TODO(), &ret)
+	err = crsr.All(ctx, &ret)
 	if err != nil {
 		return ret, err
 	}
-	crsr.Close(context.TODO())
 	return ret, nil
 }
-func InsertOne[T any]()  {}
-func InsertMany[T any]() {}
-func UpdateOne[T any]()  {}
-func UpdateMany[T any]() {}
-func DeleteOne[T any]()  {}
-func DeleteMany[T any]() {}
+func InsertOne[T any](ctx context.Context, client MongoClient, collection string, doc T) (*mongo.InsertOneResult, error) {
+	c := client.Database.Collection(collection)
+	ret, err := c.InsertOne(ctx, doc)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+func InsertMany[T any](ctx context.Context, client MongoClient, collection string, docs []T) (*mongo.InsertManyResult, error) {
+	c := client.Database.Collection(collection)
+	IDocs := make([]interface{}, len(docs))
+	for i, doc := range docs {
+		IDocs[i] = doc
+	}
+	ret, err := c.InsertMany(ctx, IDocs)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+func UpdateOne[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string, doc T) (*mongo.UpdateResult, error) {
+	c := client.Database.Collection(collection)
+	ret, err := c.UpdateOne(ctx, FilterDocument(filter), bson.M{"$set": doc})
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+func UpdateMany[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string, doc []T) (*mongo.UpdateResult, error) {
+	c := client.Database.Collection(collection)
+	ret, err := c.UpdateMany(ctx, FilterDocument(filter), doc)
+	if err != nil {
+		return ret, err
+	}
+	return ret, nil
+}
+func DeleteOne(ctx context.Context, client MongoClient, collection string, filter map[string]string) (*mongo.DeleteResult, error) {
+	c := client.Database.Collection(collection)
+	ret, err := c.DeleteOne(ctx, FilterDocument(filter))
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+func DeleteMany(ctx context.Context, client MongoClient, collection string, filter map[string]string) (*mongo.DeleteResult, error) {
+	c := client.Database.Collection(collection)
+	ret, err := c.DeleteMany(ctx, FilterDocument(filter))
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
