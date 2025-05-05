@@ -18,6 +18,11 @@ type MongoFilter struct {
 	Operator string
 	Value    interface{}
 }
+type MongoAggregate struct {
+	Field    string
+	Operator string
+	Value    interface{}
+}
 
 func (mc *MongoClient) Ping() error {
 	return mc.MongoClient.Ping(context.TODO(), nil)
@@ -35,6 +40,7 @@ func (mc *MongoClient) Connect(ctx context.Context, uri string, database string)
 func (mc *MongoClient) Disconnect() error {
 	return mc.MongoClient.Disconnect(context.TODO())
 }
+
 func createFilter(filter []MongoFilter) (bson.M, error) {
 	var f = bson.M{}
 	for _, value := range filter {
@@ -156,6 +162,21 @@ func DeleteMany(ctx context.Context, client MongoClient, collection string, filt
 	ret, err := c.DeleteMany(ctx, f)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteMany: failed to delete many: %w", err)
+	}
+	return ret, nil
+}
+func Aggregate[T any](ctx context.Context, client MongoClient, collection string, pipeline []bson.D) ([]T, error) {
+	c := client.Database.Collection(collection)
+	crsr, err := c.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("Aggregate: failed to aggregate: %w", err)
+	}
+	defer crsr.Close(ctx)
+
+	var ret []T
+	err = crsr.All(ctx, &ret)
+	if err != nil {
+		return ret, fmt.Errorf("Aggregate: failed to decode: %w", err)
 	}
 	return ret, nil
 }

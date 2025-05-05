@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/crowemi-io/crowemi-go-utils/config"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func setup() *MongoClient {
@@ -131,5 +132,30 @@ func TestMongoDBDeleteMany(t *testing.T) {
 		t.Errorf("Expected to get an ID, got nil")
 	} else if ret.DeletedCount == 0 {
 		t.Errorf("Expected to delete one document, got %d", ret.DeletedCount)
+	}
+}
+
+func TestMongoDBAggregate(t *testing.T) {
+	c := setup()
+	type symbol struct {
+		Symbol   string  `bson:"_id"`
+		Profit   float64 `bson:"profit"`
+		Notional float64 `bson:"total"`
+	}
+	a := []bson.D{
+		{{Key: "$match", Value: bson.D{{Key: "sell_at_utc", Value: nil}}}},
+		{
+			{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: "$symbol"},
+				{Key: "total", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "profit", Value: bson.D{{Key: "$sum", Value: "$notional"}}},
+			}},
+		}}
+	ret, err := Aggregate[symbol](context.TODO(), *c, "orders", a)
+	if err != nil {
+		t.Errorf("Failed to aggregate documents: %v", err)
+	}
+	if ret == nil {
+		t.Errorf("Expected to get an ID, got nil")
 	}
 }
