@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,6 +12,11 @@ import (
 type MongoClient struct {
 	Database    *mongo.Database
 	MongoClient *mongo.Client
+}
+type MongoFilter struct {
+	Field    string
+	Operator string
+	Value    interface{}
 }
 
 func (mc *MongoClient) Ping() error {
@@ -29,36 +35,58 @@ func (mc *MongoClient) Connect(ctx context.Context, uri string, database string)
 func (mc *MongoClient) Disconnect() error {
 	return mc.MongoClient.Disconnect(context.TODO())
 }
-
-func FilterDocument(filter map[string]string) bson.D {
-	var bsonFilters = bson.D{}
-	for key, value := range filter {
-		bsonFilters = append(bsonFilters, bson.E{Key: key, Value: value})
+func createFilter(filter []MongoFilter) (bson.M, error) {
+	var f = bson.M{}
+	for _, value := range filter {
+		switch value.Operator {
+		case "$eq", "$ne", "$gt", "$gte", "$lt", "$lte":
+			// Simple operators: { field: { $op: value } }
+			f[value.Field] = bson.M{value.Operator: value.Value}
+		case "$in", "$nin":
+			// Array operators: { field: { $in: []interface{} } }
+			if values, ok := value.Value.([]interface{}); ok {
+				f[value.Field] = bson.M{value.Operator: values}
+			} else {
+				return nil, fmt.Errorf("value for %s must be a slice", value.Operator)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported operator: %s", value.Operator)
+		}
 	}
-	return bsonFilters
+	return f, nil
 }
-func GetOne[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string) (T, error) {
-	c := client.Database.Collection(collection)
-	result := c.FindOne(ctx, FilterDocument(filter))
+
+func GetOne[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter) (T, error) {
 	var ret T
-	err := result.Decode(&ret)
+	c := client.Database.Collection(collection)
+	f, err := createFilter(filter)
+	if err != nil {
+		return ret, err
+	}
+	result := c.FindOne(ctx, f)
+
+	err = result.Decode(&ret)
 	if err != nil {
 		return ret, err
 	}
 	return ret, nil
 }
-func GetMany[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string) ([]T, error) {
+func GetMany[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter) ([]T, error) {
 	c := client.Database.Collection(collection)
-	crsr, err := c.Find(ctx, FilterDocument(filter))
+	f, err := createFilter(filter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetMany: failed to create filter: %w", err)
+	}
+	crsr, err := c.Find(ctx, f)
+	if err != nil {
+		return nil, fmt.Errorf("GetMany: failed to find: %w", err)
 	}
 	defer crsr.Close(ctx)
 
 	var ret []T
 	err = crsr.All(ctx, &ret)
 	if err != nil {
-		return ret, err
+		return ret, fmt.Errorf("GetMany: failed to decode: %w", err)
 	}
 	return ret, nil
 }
@@ -66,7 +94,7 @@ func InsertOne[T any](ctx context.Context, client MongoClient, collection string
 	c := client.Database.Collection(collection)
 	ret, err := c.InsertOne(ctx, doc)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("InsertOne: failed to insert one: %w", err)
 	}
 	return ret, nil
 }
@@ -78,39 +106,56 @@ func InsertMany[T any](ctx context.Context, client MongoClient, collection strin
 	}
 	ret, err := c.InsertMany(ctx, IDocs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("InsertMany: failed to insert many: %w", err)
 	}
 	return ret, nil
 }
-func UpdateOne[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string, doc T) (*mongo.UpdateResult, error) {
+func UpdateOne[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter, doc T) (*mongo.UpdateResult, error) {
 	c := client.Database.Collection(collection)
-	ret, err := c.UpdateOne(ctx, FilterDocument(filter), bson.M{"$set": doc})
+	f, err := createFilter(filter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UpdateOne: failed to create filter: %w", err)
+	}
+
+	ret, err := c.UpdateOne(ctx, f, bson.M{"$set": doc})
+	if err != nil {
+		return nil, fmt.Errorf("UpdateOne: failed to update one: %w", err)
 	}
 	return ret, nil
 }
-func UpdateMany[T any](ctx context.Context, client MongoClient, collection string, filter map[string]string, doc []T) (*mongo.UpdateResult, error) {
+func UpdateMany[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter, doc []T) (*mongo.UpdateResult, error) {
 	c := client.Database.Collection(collection)
-	ret, err := c.UpdateMany(ctx, FilterDocument(filter), doc)
+	f, err := createFilter(filter)
 	if err != nil {
-		return ret, err
+		return nil, fmt.Errorf("UpdateMany: failed to create filter: %w", err)
+	}
+	ret, err := c.UpdateMany(ctx, f, doc)
+	if err != nil {
+		return ret, fmt.Errorf("UpdateMany: failed to update many: %w", err)
 	}
 	return ret, nil
 }
-func DeleteOne(ctx context.Context, client MongoClient, collection string, filter map[string]string) (*mongo.DeleteResult, error) {
+func DeleteOne(ctx context.Context, client MongoClient, collection string, filter []MongoFilter) (*mongo.DeleteResult, error) {
 	c := client.Database.Collection(collection)
-	ret, err := c.DeleteOne(ctx, FilterDocument(filter))
+	f, err := createFilter(filter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DeleteOne: failed to create filter: %w", err)
+	}
+	ret, err := c.DeleteOne(ctx, f)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteOne: failed to delete one: %w", err)
 	}
 	return ret, nil
 }
-func DeleteMany(ctx context.Context, client MongoClient, collection string, filter map[string]string) (*mongo.DeleteResult, error) {
+func DeleteMany(ctx context.Context, client MongoClient, collection string, filter []MongoFilter) (*mongo.DeleteResult, error) {
 	c := client.Database.Collection(collection)
-	ret, err := c.DeleteMany(ctx, FilterDocument(filter))
+	f, err := createFilter(filter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DeleteMany: failed to create filter: %w", err)
+	}
+	ret, err := c.DeleteMany(ctx, f)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteMany: failed to delete many: %w", err)
 	}
 	return ret, nil
 }
