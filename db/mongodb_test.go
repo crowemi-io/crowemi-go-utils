@@ -34,8 +34,10 @@ func TestMongoDBPing(t *testing.T) {
 func TestMongoDBGetOne(t *testing.T) {
 	c := setup()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL"}}
-	type symbol struct{ Symbol string }
-	result, err := GetOne[symbol](context.TODO(), c, "symbol", f)
+	type symbol struct {
+		Symbol string `bson:"symbol"`
+	}
+	result, err := GetOne[symbol](context.TODO(), c, "orders", f)
 	if err != nil {
 		t.Errorf("Failed to get one document: %v", err)
 	}
@@ -47,8 +49,10 @@ func TestMongoDBGetOne(t *testing.T) {
 func TestMongoDBGetMany(t *testing.T) {
 	c := setup()
 	// f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL1"}}
-	type symbol struct{ Symbol string }
-	result, err := GetMany[symbol](context.TODO(), c, "symbol", []MongoFilter{})
+	type symbol struct {
+		Symbol string `bson:"symbol"`
+	}
+	result, err := GetMany[symbol](context.TODO(), c, "orders", nil)
 	if err != nil {
 		t.Errorf("Failed to get one document: %v", err)
 	}

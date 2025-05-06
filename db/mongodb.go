@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -41,7 +42,7 @@ func (mc *MongoClient) Disconnect() error {
 	return mc.MongoClient.Disconnect(context.TODO())
 }
 
-func createFilter(filter []MongoFilter) (bson.M, error) {
+func createFilter(filter []MongoFilter) (primitive.M, error) {
 	var f = bson.M{}
 	for _, value := range filter {
 		switch value.Operator {
@@ -64,13 +65,18 @@ func createFilter(filter []MongoFilter) (bson.M, error) {
 
 func GetOne[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (T, error) {
 	var ret T
-	c := client.Database.Collection(collection)
-	f, err := createFilter(filter)
-	if err != nil {
-		return ret, err
-	}
-	result := c.FindOne(ctx, f)
+	var err error
 
+	c := client.Database.Collection(collection)
+	f := primitive.M{}
+	if filter != nil {
+		f, err = createFilter(filter)
+		if err != nil {
+			return ret, err
+		}
+	}
+
+	result := c.FindOne(ctx, f)
 	err = result.Decode(&ret)
 	if err != nil {
 		return ret, err
@@ -78,11 +84,18 @@ func GetOne[T any](ctx context.Context, client *MongoClient, collection string, 
 	return ret, nil
 }
 func GetMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) ([]T, error) {
+	var err error
+
 	c := client.Database.Collection(collection)
-	f, err := createFilter(filter)
-	if err != nil {
-		return nil, fmt.Errorf("GetMany: failed to create filter: %w", err)
+	f := primitive.M{}
+
+	if filter != nil {
+		f, err = createFilter(filter)
+		if err != nil {
+			return nil, fmt.Errorf("GetMany: failed to create filter: %w", err)
+		}
 	}
+
 	crsr, err := c.Find(ctx, f)
 	if err != nil {
 		return nil, fmt.Errorf("GetMany: failed to find: %w", err)
