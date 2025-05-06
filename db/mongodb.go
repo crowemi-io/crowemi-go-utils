@@ -62,7 +62,7 @@ func createFilter(filter []MongoFilter) (bson.M, error) {
 	return f, nil
 }
 
-func GetOne[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter) (T, error) {
+func GetOne[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (T, error) {
 	var ret T
 	c := client.Database.Collection(collection)
 	f, err := createFilter(filter)
@@ -77,7 +77,7 @@ func GetOne[T any](ctx context.Context, client MongoClient, collection string, f
 	}
 	return ret, nil
 }
-func GetMany[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter) ([]T, error) {
+func GetMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) ([]T, error) {
 	c := client.Database.Collection(collection)
 	f, err := createFilter(filter)
 	if err != nil {
@@ -96,7 +96,7 @@ func GetMany[T any](ctx context.Context, client MongoClient, collection string, 
 	}
 	return ret, nil
 }
-func InsertOne[T any](ctx context.Context, client MongoClient, collection string, doc T) (*mongo.InsertOneResult, error) {
+func InsertOne[T any](ctx context.Context, client *MongoClient, collection string, doc T) (*mongo.InsertOneResult, error) {
 	c := client.Database.Collection(collection)
 	ret, err := c.InsertOne(ctx, doc)
 	if err != nil {
@@ -104,7 +104,7 @@ func InsertOne[T any](ctx context.Context, client MongoClient, collection string
 	}
 	return ret, nil
 }
-func InsertMany[T any](ctx context.Context, client MongoClient, collection string, docs []T) (*mongo.InsertManyResult, error) {
+func InsertMany[T any](ctx context.Context, client *MongoClient, collection string, docs []T) (*mongo.InsertManyResult, error) {
 	c := client.Database.Collection(collection)
 	IDocs := make([]interface{}, len(docs))
 	for i, doc := range docs {
@@ -116,7 +116,7 @@ func InsertMany[T any](ctx context.Context, client MongoClient, collection strin
 	}
 	return ret, nil
 }
-func UpdateOne[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter, doc T) (*mongo.UpdateResult, error) {
+func UpdateOne[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter, doc T) (*mongo.UpdateResult, error) {
 	c := client.Database.Collection(collection)
 	f, err := createFilter(filter)
 	if err != nil {
@@ -129,7 +129,7 @@ func UpdateOne[T any](ctx context.Context, client MongoClient, collection string
 	}
 	return ret, nil
 }
-func UpdateMany[T any](ctx context.Context, client MongoClient, collection string, filter []MongoFilter, doc []T) (*mongo.UpdateResult, error) {
+func UpdateMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter, doc []T) (*mongo.UpdateResult, error) {
 	c := client.Database.Collection(collection)
 	f, err := createFilter(filter)
 	if err != nil {
@@ -141,7 +141,7 @@ func UpdateMany[T any](ctx context.Context, client MongoClient, collection strin
 	}
 	return ret, nil
 }
-func DeleteOne(ctx context.Context, client MongoClient, collection string, filter []MongoFilter) (*mongo.DeleteResult, error) {
+func DeleteOne(ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (*mongo.DeleteResult, error) {
 	c := client.Database.Collection(collection)
 	f, err := createFilter(filter)
 	if err != nil {
@@ -153,7 +153,7 @@ func DeleteOne(ctx context.Context, client MongoClient, collection string, filte
 	}
 	return ret, nil
 }
-func DeleteMany(ctx context.Context, client MongoClient, collection string, filter []MongoFilter) (*mongo.DeleteResult, error) {
+func DeleteMany(ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (*mongo.DeleteResult, error) {
 	c := client.Database.Collection(collection)
 	f, err := createFilter(filter)
 	if err != nil {
@@ -165,7 +165,7 @@ func DeleteMany(ctx context.Context, client MongoClient, collection string, filt
 	}
 	return ret, nil
 }
-func Aggregate[T any](ctx context.Context, client MongoClient, collection string, pipeline []bson.D) ([]T, error) {
+func Aggregate[T any](ctx context.Context, client *MongoClient, collection string, pipeline []bson.D) ([]T, error) {
 	c := client.Database.Collection(collection)
 	crsr, err := c.Aggregate(ctx, pipeline)
 	if err != nil {

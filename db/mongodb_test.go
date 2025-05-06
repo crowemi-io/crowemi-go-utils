@@ -35,7 +35,7 @@ func TestMongoDBGetOne(t *testing.T) {
 	c := setup()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL"}}
 	type symbol struct{ Symbol string }
-	result, err := GetOne[symbol](context.TODO(), *c, "symbol", f)
+	result, err := GetOne[symbol](context.TODO(), c, "symbol", f)
 	if err != nil {
 		t.Errorf("Failed to get one document: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestMongoDBGetMany(t *testing.T) {
 	c := setup()
 	// f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL1"}}
 	type symbol struct{ Symbol string }
-	result, err := GetMany[symbol](context.TODO(), *c, "symbol", []MongoFilter{})
+	result, err := GetMany[symbol](context.TODO(), c, "symbol", []MongoFilter{})
 	if err != nil {
 		t.Errorf("Failed to get one document: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestMongoDBInsertOne(t *testing.T) {
 		Symbol string `bson:"symbol"`
 	}
 	s := symbol{Symbol: "OXY"}
-	ret, err := InsertOne(context.TODO(), *c, "symbol", s)
+	ret, err := InsertOne(context.TODO(), c, "symbol", s)
 	if err != nil {
 		t.Errorf("Failed to insert one document: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestMongoDBInsertMany(t *testing.T) {
 		{Symbol: "OXY1"},
 		{Symbol: "AAPL1"},
 	}
-	ret, err := InsertMany(context.TODO(), *c, "symbol", s)
+	ret, err := InsertMany(context.TODO(), c, "symbol", s)
 	if err != nil {
 		t.Errorf("Failed to insert many documents: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestMongoDBUpdateOne(t *testing.T) {
 	}
 	s := symbol{Symbol: "OXY", CreatedAt: time.Now()}
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "OXY"}}
-	ret, err := UpdateOne(context.TODO(), *c, "symbol", f, s)
+	ret, err := UpdateOne(context.TODO(), c, "symbol", f, s)
 	if err != nil {
 		t.Errorf("Failed to update one document: %v", err)
 	}
@@ -111,7 +111,7 @@ func TestMongoDBUpdateMany(t *testing.T) {}
 func TestMongoDBDeleteOne(t *testing.T) {
 	c := setup()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "OXY1"}}
-	ret, err := DeleteOne(context.TODO(), *c, "symbol", f)
+	ret, err := DeleteOne(context.TODO(), c, "symbol", f)
 	if err != nil {
 		t.Errorf("Failed to delete one document: %v", err)
 	}
@@ -124,7 +124,7 @@ func TestMongoDBDeleteOne(t *testing.T) {
 func TestMongoDBDeleteMany(t *testing.T) {
 	c := setup()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL1"}}
-	ret, err := DeleteMany(context.TODO(), *c, "symbol", f)
+	ret, err := DeleteMany(context.TODO(), c, "symbol", f)
 	if err != nil {
 		t.Errorf("Failed to delete many documents: %v", err)
 	}
@@ -151,7 +151,7 @@ func TestMongoDBAggregate(t *testing.T) {
 				{Key: "profit", Value: bson.D{{Key: "$sum", Value: "$notional"}}},
 			}},
 		}}
-	ret, err := Aggregate[symbol](context.TODO(), *c, "orders", a)
+	ret, err := Aggregate[symbol](context.TODO(), c, "orders", a)
 	if err != nil {
 		t.Errorf("Failed to aggregate documents: %v", err)
 	}
