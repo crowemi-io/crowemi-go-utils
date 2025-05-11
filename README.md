@@ -1,0 +1,1 @@
+This is a go utilities library for interacting with the crowemi-io eco-system.
