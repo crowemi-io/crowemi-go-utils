@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Bootstrap[T any]() (*T, error) {
+func Bootstrap[T any](configPath string) (*T, error) {
 	var config T
 	value := os.Getenv("CONFIG")
 	if value != "" {
@@ -16,7 +16,7 @@ func Bootstrap[T any]() (*T, error) {
 		}
 		json.Unmarshal(decode, &config)
 	} else {
-		contents, err := os.ReadFile("../.secret/config-local.json")
+		contents, err := os.ReadFile(configPath)
 		if err != nil {
 			return nil, err
 		}

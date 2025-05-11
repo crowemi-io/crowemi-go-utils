@@ -10,7 +10,7 @@ import (
 )
 
 func setup() *MongoClient {
-	config, _ := config.Bootstrap[config.Crowemi]()
+	config, _ := config.Bootstrap[config.Crowemi]("../.secret/config-db.json")
 	c := MongoClient{}
 	c.Connect(context.TODO(), config.DatabaseURI, config.ClientName)
 	return &c
