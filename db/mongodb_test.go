@@ -57,8 +57,8 @@ func TestMongoDBGetMany(t *testing.T) {
 		t.Errorf("Failed to get one document: %v", err)
 	}
 	// Ensure the result is not empty by checking a relevant field
-	if len(result) == 0 {
-		t.Errorf("Expected to get at least one document, got %d", len(result))
+	if len(*result) == 0 {
+		t.Errorf("Expected to get at least one document, got %d", len(*result))
 	}
 }
 func TestMongoDBInsertOne(t *testing.T) {

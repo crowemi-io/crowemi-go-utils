@@ -83,7 +83,7 @@ func GetOne[T any](ctx context.Context, client *MongoClient, collection string, 
 	}
 	return ret, nil
 }
-func GetMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) ([]T, error) {
+func GetMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (*[]T, error) {
 	var err error
 
 	c := client.Database.Collection(collection)
@@ -105,9 +105,9 @@ func GetMany[T any](ctx context.Context, client *MongoClient, collection string,
 	var ret []T
 	err = crsr.All(ctx, &ret)
 	if err != nil {
-		return ret, fmt.Errorf("GetMany: failed to decode: %w", err)
+		return &ret, fmt.Errorf("GetMany: failed to decode: %w", err)
 	}
-	return ret, nil
+	return &ret, nil
 }
 func InsertOne[T any](ctx context.Context, client *MongoClient, collection string, doc T) (*mongo.InsertOneResult, error) {
 	c := client.Database.Collection(collection)
