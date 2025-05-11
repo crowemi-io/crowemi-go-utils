@@ -3,7 +3,7 @@ package config
 type GoogleCloudCredential struct{}
 
 type GoogleCloud struct {
-	ProjectId  string                `json:"project_id" omitempty:"true"`
-	Topic      string                `json:"topic" omitempty:"true"`
+	ProjectID  string                `json:"project_id" omitempty:"true"`
+	Topics     map[string]string     `json:"topics" omitempty:"true"`
 	Credential GoogleCloudCredential `json:"credentials" omitempty:"true"`
 }

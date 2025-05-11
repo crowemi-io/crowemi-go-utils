@@ -10,7 +10,9 @@ import (
 )
 
 type GoogleCloudClient struct {
-	Config *config.GoogleCloud
+	App     string
+	Session string
+	Config  *config.GoogleCloud
 }
 
 type LogLevel int
@@ -37,21 +39,31 @@ type LogMessage struct {
 	Path      string    `json:"path" omitempty:"true"`
 }
 
-func (logMessage *LogMessage) Log(projectID string, topicID string) (string, error) {
+func (gcp *GoogleCloudClient) Log(message string, level LogLevel, obj any, path string) (string, error) {
 	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
+	client, err := pubsub.NewClient(ctx, gcp.Config.ProjectID)
 	if err != nil {
 		return "", err
 	}
 	defer client.Close()
 
-	message, err := json.Marshal(logMessage)
+	logMessage := LogMessage{
+		CreatedAt: time.Now(),
+		App:       gcp.App,
+		Message:   message,
+		Level:     level.String(),
+		Obj:       obj,
+		Session:   gcp.Session,
+		Path:      path,
+	}
+	m, err := json.Marshal(logMessage)
 	if err != nil {
 		return "", err
 	}
-	topic := client.Topic(topicID)
+
+	topic := client.Topic(gcp.Config.Topics["log"])
 	result := topic.Publish(ctx, &pubsub.Message{
-		Data: []byte(message),
+		Data: []byte(m),
 	})
 	// Get the server-generated message ID
 	id, err := result.Get(ctx)
