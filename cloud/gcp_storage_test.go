@@ -8,15 +8,18 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func setUp() (*GcpStorageClient, error) {
+func setUp() (*GcpClient, error) {
 	storageClient, err := storage.NewClient(context.TODO())
 	if err != nil {
 		return nil, err
 	}
 	bucket := storageClient.Bucket("crowemi-trades")
-	client := GcpStorageClient{
+	cloudStorage := CloudStorage{
 		Bucket:        bucket,
 		StorageClient: storageClient,
+	}
+	client := GcpClient{
+		CloudStorage: &cloudStorage,
 	}
 	return &client, nil
 }

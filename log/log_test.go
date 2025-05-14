@@ -10,6 +10,7 @@ import (
 func setup() *cloud.GcpClient {
 	config, _ := config.Bootstrap[config.GoogleCloud]("../.secret/config-gcp.json")
 	client := &cloud.GcpClient{
+		App:    "crowemi-go-utils",
 		Config: config,
 	}
 	return client

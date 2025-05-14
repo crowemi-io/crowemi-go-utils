@@ -33,7 +33,6 @@ type LogMessage struct {
 	Message   string    `json:"message" omitempty:"true"`
 	Level     string    `json:"level" omitempty:"true"`
 	Obj       any       `json:"obj" omitempty:"true"`
-	Session   string    `json:"session" omitempty:"true"`
 	Path      string    `json:"path" omitempty:"true"`
 }
 
@@ -52,7 +51,6 @@ func (logger *Logger) Log(message string, level LogLevel, obj any, path string) 
 		Message:   message,
 		Level:     level.String(),
 		Obj:       obj,
-		Session:   gcp.Session,
 		Path:      path,
 	}
 	m, err := json.Marshal(logMessage)

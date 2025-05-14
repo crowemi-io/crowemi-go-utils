@@ -6,13 +6,13 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-type GcpStorageClient struct {
+type CloudStorage struct {
 	Bucket        *storage.BucketHandle
 	StorageClient *storage.Client
 }
 
-func (c *GcpStorageClient) Write(prefix string, contents []byte) error {
-	object := c.Bucket.Object(prefix)
+func (c *GcpClient) Write(prefix string, contents []byte) error {
+	object := c.CloudStorage.Bucket.Object(prefix)
 	writer := object.NewWriter(context.Background())
 
 	_, err := writer.Write(contents)
@@ -26,4 +26,4 @@ func (c *GcpStorageClient) Write(prefix string, contents []byte) error {
 
 	return nil
 }
-func (client *GcpStorageClient) Read() {}
+func (client *GcpClient) Read() {}
