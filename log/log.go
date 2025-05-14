@@ -1,4 +1,4 @@
-package cloud
+package log
 
 import (
 	"context"
@@ -6,13 +6,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/crowemi-io/crowemi-go-utils/config"
+	"github.com/crowemi-io/crowemi-go-utils/cloud"
 )
 
-type GoogleCloudClient struct {
-	App     string
-	Session string
-	Config  *config.GoogleCloud
+type Logger struct {
+	GcpClient *cloud.GcpClient
 }
 
 type LogLevel int
@@ -39,7 +37,8 @@ type LogMessage struct {
 	Path      string    `json:"path" omitempty:"true"`
 }
 
-func (gcp *GoogleCloudClient) Log(message string, level LogLevel, obj any, path string) (string, error) {
+func (logger *Logger) Log(message string, level LogLevel, obj any, path string) (string, error) {
+	gcp := logger.GcpClient
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, gcp.Config.ProjectID)
 	if err != nil {
