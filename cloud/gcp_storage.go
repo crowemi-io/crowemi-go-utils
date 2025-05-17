@@ -2,6 +2,9 @@ package cloud
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"log"
 
 	"cloud.google.com/go/storage"
 )
@@ -11,19 +14,48 @@ type CloudStorage struct {
 	StorageClient *storage.Client
 }
 
-func (c *GcpClient) Write(prefix string, contents []byte) error {
+func (c *GcpClient) Write(prefix string, contents []byte) (int, error) {
 	object := c.CloudStorage.Bucket.Object(prefix)
 	writer := object.NewWriter(context.Background())
 
-	_, err := writer.Write(contents)
+	ret, err := writer.Write(contents)
 	if err != nil {
-		return err
+		return -1, err
 	}
-	err = writer.Close()
+	defer func() {
+		closeErr := writer.Close()
+		if closeErr != nil {
+			if err != nil {
+				err = fmt.Errorf("%w; additionally, failed to close reader: %v", err, closeErr)
+			} else {
+				err = fmt.Errorf("failed to close reader: %w", closeErr)
+			}
+		}
+	}()
+
+	return ret, err
+}
+func (c *GcpClient) Read(prefix string) ([]byte, error) {
+	object := c.CloudStorage.Bucket.Object(prefix)
+	reader, err := object.NewReader(context.Background())
 	if err != nil {
-		return err
+		return nil, err
+	}
+	defer func() {
+		closeErr := reader.Close()
+		if closeErr != nil {
+			if err != nil {
+				err = fmt.Errorf("%w; additionally, failed to close reader: %v", err, closeErr)
+			} else {
+				err = fmt.Errorf("failed to close reader: %w", closeErr)
+			}
+		}
+	}()
+
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		log.Fatalf("failed to read object: %v", err)
 	}
 
-	return nil
+	return data, err
 }
-func (client *GcpClient) Read() {}

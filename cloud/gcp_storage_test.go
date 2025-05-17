@@ -41,3 +41,34 @@ func TestWrite(t *testing.T) {
 	c.Write("test/test.json", b)
 
 }
+
+type Hello struct {
+	Hello string
+	World string
+}
+
+func TestRead(t *testing.T) {
+	c, err := setUp()
+	file := "test/test.json"
+	if err != nil {
+		t.Fatal("failed to create storage client")
+	}
+
+	data, err := c.Read(file)
+	if err != nil {
+		t.Fatalf("failed to reade file %s", file)
+	}
+
+	h := &Hello{}
+	err = json.Unmarshal(data, h)
+	if err != nil {
+		t.Fatalf("failed to unmarshal json")
+	}
+
+	if h.Hello != "Hello" {
+		t.Fail()
+	}
+	if h.World != "World" {
+		t.Fail()
+	}
+}
