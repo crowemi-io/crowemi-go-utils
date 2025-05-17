@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 
 	"cloud.google.com/go/storage"
 )
@@ -54,7 +53,7 @@ func (c *GcpClient) Read(prefix string) ([]byte, error) {
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		log.Fatalf("failed to read object: %v", err)
+		return nil, err
 	}
 
 	return data, err
