@@ -19,6 +19,10 @@ type MongoFilter struct {
 	Operator string
 	Value    interface{}
 }
+type MongoSort struct {
+	Field     string
+	Direction int
+}
 type MongoAggregate struct {
 	Field    string
 	Operator string
@@ -62,9 +66,17 @@ func createFilter(filter []MongoFilter) (primitive.M, error) {
 	}
 	return f, nil
 }
+func createSort(sort []MongoSort) primitive.D {
+	var ret = bson.D{}
+	for _, value := range sort {
+		ret = append(ret, bson.E{value.Field, value.Direction})
+	}
+	return ret
+}
 
-func GetOne[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (T, error) {
+func GetOne[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter, sort []MongoSort) (T, error) {
 	var ret T
+	var options options.FindOneOptions
 	var err error
 
 	c := client.Database.Collection(collection)
@@ -75,16 +87,24 @@ func GetOne[T any](ctx context.Context, client *MongoClient, collection string, 
 			return ret, err
 		}
 	}
-
-	result := c.FindOne(ctx, f)
+	if sort != nil {
+		sortOptions := createSort(sort)
+		options.SetSort(sortOptions)
+		if err != nil {
+			return ret, err
+		}
+	}
+	result := c.FindOne(ctx, f, &options)
 	err = result.Decode(&ret)
 	if err != nil {
 		return ret, err
 	}
 	return ret, nil
 }
-func GetMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter) (*[]T, error) {
+func GetMany[T any](ctx context.Context, client *MongoClient, collection string, filter []MongoFilter, sort []MongoSort) (*[]T, error) {
+	var ret []T
 	var err error
+	var options options.FindOptions
 
 	c := client.Database.Collection(collection)
 	f := primitive.M{}
@@ -95,14 +115,20 @@ func GetMany[T any](ctx context.Context, client *MongoClient, collection string,
 			return nil, fmt.Errorf("GetMany: failed to create filter: %w", err)
 		}
 	}
+	if sort != nil {
+		sortOptions := createSort(sort)
+		options.SetSort(sortOptions)
+		if err != nil {
+			return &ret, err
+		}
+	}
 
-	crsr, err := c.Find(ctx, f)
+	crsr, err := c.Find(ctx, f, &options)
 	if err != nil {
 		return nil, fmt.Errorf("GetMany: failed to find: %w", err)
 	}
 	defer crsr.Close(ctx)
 
-	var ret []T
 	err = crsr.All(ctx, &ret)
 	if err != nil {
 		return &ret, fmt.Errorf("GetMany: failed to decode: %w", err)
