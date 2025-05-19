@@ -34,10 +34,12 @@ func TestMongoDBPing(t *testing.T) {
 func TestMongoDBGetOne(t *testing.T) {
 	c := setup()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL"}}
-	type symbol struct {
-		Symbol string `bson:"symbol"`
+	s := []MongoSort{{Field: "buy_price", Direction: -1}}
+	type order struct {
+		CreatedAt time.Time `bson:"created_at"`
+		Symbol    string    `bson:"symbol"`
 	}
-	result, err := GetOne[symbol](context.TODO(), c, "orders", f)
+	result, err := GetOne[order](context.TODO(), c, "orders", f, s)
 	if err != nil {
 		t.Errorf("Failed to get one document: %v", err)
 	}
@@ -49,10 +51,13 @@ func TestMongoDBGetOne(t *testing.T) {
 func TestMongoDBGetMany(t *testing.T) {
 	c := setup()
 	// f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL1"}}
-	type symbol struct {
-		Symbol string `bson:"symbol"`
+	s := []MongoSort{{Field: "buy_price", Direction: -1}}
+
+	type order struct {
+		CreatedAt time.Time `bson:"created_at"`
+		Symbol    string    `bson:"symbol"`
 	}
-	result, err := GetMany[symbol](context.TODO(), c, "orders", nil)
+	result, err := GetMany[order](context.TODO(), c, "orders", nil, s)
 	if err != nil {
 		t.Errorf("Failed to get one document: %v", err)
 	}
