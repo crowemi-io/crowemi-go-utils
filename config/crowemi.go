@@ -15,6 +15,7 @@ type Crowemi struct {
 	Uri             map[string]string `json:"uri" omitempty:"true"`
 	DatabaseURI     string            `json:"database_uri" omitempty:"true"`
 	Env             string            `json:"env" omitempty:"true"`
+	Debug           bool              `json:"debug" omitempty:"true"`
 }
 
 func (c *Crowemi) CreateHeaders(req *http.Request, audience string, sessionID string) error {
