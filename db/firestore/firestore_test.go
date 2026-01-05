@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cloud.google.com/go/firestore"
 	"github.com/crowemi-io/crowemi-go-utils/config"
 	"github.com/crowemi-io/crowemi-go-utils/db"
 )
@@ -59,7 +60,6 @@ func TestFirestoreGetOne(t *testing.T) {
 	// t.Logf("Document ID: %s", doc.Ref.ID)
 	// t.Logf("Document data: %v", doc.Data())
 }
-
 func TestFirestoreGetMany(t *testing.T) {
 	c, err := setup()
 	if err != nil {
@@ -82,7 +82,6 @@ func TestFirestoreGetMany(t *testing.T) {
 		t.Logf("Document name: %s", d.Name)
 	}
 }
-
 func TestFireststoreInsertOne(t *testing.T) {
 	c, err := setup()
 	if err != nil {
@@ -95,7 +94,7 @@ func TestFireststoreInsertOne(t *testing.T) {
 	defer firestoreClient.Close()
 
 	o := obj{
-		Name:   "Hadley",
+		Name:   "John Doe",
 		Salary: 1000000,
 	}
 
@@ -104,5 +103,45 @@ func TestFireststoreInsertOne(t *testing.T) {
 		t.Logf("Failed to insert one document to Firestore: %v", err)
 	}
 	t.Logf("Document name: %s", ret.ID)
+	t.Logf("Document name: %s", res)
+}
+func TestFirestoreUpdateOne(t *testing.T) {
+	c, err := setup()
+	if err != nil {
+		t.Errorf("Failed to setup Firestore: %v", err)
+	}
+	firestoreClient, err := c.Connect(context.TODO())
+	if err != nil {
+		t.Errorf("Failed to connect to Firestore: %v", err)
+	}
+	defer firestoreClient.Close()
+
+	updates := []firestore.Update{}
+	f := firestore.Update{
+		Path:  "name",
+		Value: "John Doe",
+	}
+	updates = append(updates, f)
+	res, err := UpdateOne(context.TODO(), firestoreClient, "test", "7F31jh6xszH5331ICwUN", updates)
+	if err != nil {
+		t.Logf("failed updating one: %s", err)
+	}
+	t.Logf("Document name: %s", res)
+}
+func TestFirestoreDeleteOne(t *testing.T) {
+	c, err := setup()
+	if err != nil {
+		t.Errorf("Failed to setup Firestore: %v", err)
+	}
+	firestoreClient, err := c.Connect(context.TODO())
+	if err != nil {
+		t.Errorf("Failed to connect to Firestore: %v", err)
+	}
+	defer firestoreClient.Close()
+
+	res, err := DeleteOne(context.TODO(), firestoreClient, "test", "7F31jh6xszH5331ICwUN")
+	if err != nil {
+		t.Logf("failed updating one: %s", err)
+	}
 	t.Logf("Document name: %s", res)
 }

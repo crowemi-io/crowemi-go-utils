@@ -48,7 +48,20 @@ func InsertOne[T any](ctx context.Context, client *firestore.Client, collection 
 	}
 	return ref, res, err
 }
-func UpdateOne[T any]() {}
+func UpdateOne(ctx context.Context, client *firestore.Client, collection string, id string, updates []firestore.Update) (*firestore.WriteResult, error) {
+	ret, err := client.Collection(collection).Doc(id).Update(ctx, updates)
+	if err != nil {
+		return ret, err
+	}
+	return ret, err
+}
+func DeleteOne(ctx context.Context, client *firestore.Client, collection string, id string) (*firestore.WriteResult, error) {
+	ret, err := client.Collection(collection).Doc(id).Delete(ctx)
+	if err != nil {
+		return ret, err
+	}
+	return ret, err
+}
 
 func GetMany[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (*[]T, error) {
 	// TODO: handle OR filters
@@ -70,5 +83,4 @@ func GetMany[T any](ctx context.Context, client *firestore.Client, collection st
 }
 func InsertMany[T any]() {}
 func UpdateMany[T any]() {}
-func DeleteOne[T any]()  {}
 func DeleteMany[T any]() {}
