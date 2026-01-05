@@ -1,4 +1,4 @@
-package db
+package mongodb
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func setup() *MongoClient {
-	config, _ := config.Bootstrap[config.Crowemi]("../.secret/config-db.json")
+func setupMongoDB() *MongoClient {
+	config, _ := config.Bootstrap[config.Crowemi]("../../.secret/config-db.json")
 	c := MongoClient{}
 	c.Connect(context.TODO(), config.DatabaseURI, config.ClientName)
 	return &c
 }
 
 func TestMongoDBConnect(t *testing.T) {
-	p := setup()
+	p := setupMongoDB()
 	if p != nil {
 		t.Logf("Connected to MongoDB successfully")
 	} else {
@@ -25,14 +25,14 @@ func TestMongoDBConnect(t *testing.T) {
 	}
 }
 func TestMongoDBPing(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	err := c.Ping()
 	if err != nil {
 		t.Errorf("Failed to ping MongoDB: %v", err)
 	}
 }
 func TestMongoDBGetOne(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL"}}
 	s := []MongoSort{{Field: "buy_price", Direction: -1}}
 	type order struct {
@@ -49,7 +49,7 @@ func TestMongoDBGetOne(t *testing.T) {
 	}
 }
 func TestMongoDBGetMany(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	// f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL1"}}
 	s := []MongoSort{{Field: "buy_price", Direction: -1}}
 
@@ -67,7 +67,7 @@ func TestMongoDBGetMany(t *testing.T) {
 	}
 }
 func TestMongoDBInsertOne(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	type symbol struct {
 		Symbol string `bson:"symbol"`
 	}
@@ -82,7 +82,7 @@ func TestMongoDBInsertOne(t *testing.T) {
 }
 
 func TestMongoDBInsertMany(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	type symbol struct {
 		Symbol string `bson:"symbol"`
 	}
@@ -101,7 +101,7 @@ func TestMongoDBInsertMany(t *testing.T) {
 	}
 }
 func TestMongoDBUpdateOne(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	type symbol struct {
 		Symbol    string    `bson:"symbol"`
 		CreatedAt time.Time `bson:"created_at"`
@@ -118,7 +118,7 @@ func TestMongoDBUpdateOne(t *testing.T) {
 }
 func TestMongoDBUpdateMany(t *testing.T) {}
 func TestMongoDBDeleteOne(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "OXY1"}}
 	ret, err := DeleteOne(context.TODO(), c, "symbol", f)
 	if err != nil {
@@ -131,7 +131,7 @@ func TestMongoDBDeleteOne(t *testing.T) {
 	}
 }
 func TestMongoDBDeleteMany(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	f := []MongoFilter{{Field: "symbol", Operator: "$eq", Value: "AAPL1"}}
 	ret, err := DeleteMany(context.TODO(), c, "symbol", f)
 	if err != nil {
@@ -145,7 +145,7 @@ func TestMongoDBDeleteMany(t *testing.T) {
 }
 
 func TestMongoDBAggregate(t *testing.T) {
-	c := setup()
+	c := setupMongoDB()
 	type symbol struct {
 		Symbol   string  `bson:"_id"`
 		Profit   float64 `bson:"profit"`
