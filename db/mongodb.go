@@ -33,6 +33,7 @@ func (mc *MongoClient) Ping() error {
 	return mc.MongoClient.Ping(context.TODO(), nil)
 }
 func (mc *MongoClient) Connect(ctx context.Context, uri string, database string) error {
+	// pull parameters from config
 	options := options.Client().ApplyURI(uri).SetMaxPoolSize(10).SetMinPoolSize(1).SetMaxConnIdleTime(10)
 	client, err := mongo.Connect(ctx, options)
 	if err != nil {
