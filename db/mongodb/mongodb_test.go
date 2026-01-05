@@ -1,4 +1,4 @@
-package db
+package mongodb
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 func setupMongoDB() *MongoClient {
-	config, _ := config.Bootstrap[config.Crowemi]("../.secret/config-db.json")
+	config, _ := config.Bootstrap[config.Crowemi]("../../.secret/config-db.json")
 	c := MongoClient{}
 	c.Connect(context.TODO(), config.DatabaseURI, config.ClientName)
 	return &c

@@ -58,7 +58,7 @@ func (logger *Logger) Log(message string, level LogLevel, obj any, path string) 
 		return "", err
 	}
 
-	topic := client.Topic(gcp.Config.Topics["log"])
+	topic := client.Topic(gcp.Config.PubSub.Topics["log"])
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte(m),
 	})
