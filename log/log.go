@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/crowemi-io/crowemi-go-utils/storage/cloud_storage"
+	"github.com/crowemi-io/crowemi-go-utils/storage/gcp"
 )
 
 type Logger struct {
-	CloudStorage *cloud_storage.Client //TODO: this needs to be PubSub client
+	CloudStorage *gcp.Client //TODO: this needs to be PubSub client
 }
 
 type LogLevel int
