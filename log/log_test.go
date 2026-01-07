@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/crowemi-io/crowemi-go-utils/config"
-	"github.com/crowemi-io/crowemi-go-utils/storage/cloud_storage"
+	"github.com/crowemi-io/crowemi-go-utils/storage/gcp"
 )
 
-func setup() *cloud_storage.Client {
+func setup() *gcp.Client {
 	config, _ := config.Bootstrap[config.GoogleCloud]("../.secret/config-gcp.json")
-	client := &cloud_storage.Client{
+	client := &gcp.Client{
 		Config: config,
 	}
 	return client
