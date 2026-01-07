@@ -6,12 +6,12 @@ type GoogleCloud struct {
 	Region         string      `json:"region" omitempty:"true"`
 	Firestore      Firestore   `json:"firestore" omitempty:"true"`
 	PubSub         PubSub      `json:"pubsub" omitempty:"true"`
-	Vertex         Vertex      `json:"vertex" omitempty:"true"`
+	GenAI          GenAI       `json:"genai" omitempty:"true"`
 	Credential     Credentials `json:"credentials" omitempty:"true"`
 }
 
 type Credentials struct{}
-type Vertex struct {
+type GenAI struct {
 	Model  string `json:"model" omitempty:"true"`
 	ApiKey string `json:"api_key" omitempty:"true"`
 }
