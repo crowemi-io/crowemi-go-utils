@@ -1,4 +1,4 @@
-package cloud
+package gcp
 
 import (
 	"context"
@@ -6,15 +6,17 @@ import (
 	"io"
 
 	"cloud.google.com/go/storage"
+	"github.com/crowemi-io/crowemi-go-utils/config"
 )
 
-type CloudStorage struct {
+type Client struct {
+	Config        *config.GoogleCloud
 	Bucket        *storage.BucketHandle
 	StorageClient *storage.Client
 }
 
-func (c *GcpClient) Write(prefix string, contents []byte) (int, error) {
-	object := c.CloudStorage.Bucket.Object(prefix)
+func (c *Client) Write(prefix string, contents []byte) (int, error) {
+	object := c.Bucket.Object(prefix)
 	writer := object.NewWriter(context.Background())
 
 	ret, err := writer.Write(contents)
@@ -34,8 +36,8 @@ func (c *GcpClient) Write(prefix string, contents []byte) (int, error) {
 
 	return ret, err
 }
-func (c *GcpClient) Read(prefix string) ([]byte, error) {
-	object := c.CloudStorage.Bucket.Object(prefix)
+func (c *Client) Read(prefix string) ([]byte, error) {
+	object := c.Bucket.Object(prefix)
 	reader, err := object.NewReader(context.Background())
 	if err != nil {
 		return nil, err

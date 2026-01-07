@@ -3,14 +3,13 @@ package log
 import (
 	"testing"
 
-	"github.com/crowemi-io/crowemi-go-utils/cloud"
 	"github.com/crowemi-io/crowemi-go-utils/config"
+	"github.com/crowemi-io/crowemi-go-utils/storage/cloud_storage"
 )
 
-func setup() *cloud.GcpClient {
+func setup() *cloud_storage.Client {
 	config, _ := config.Bootstrap[config.GoogleCloud]("../.secret/config-gcp.json")
-	client := &cloud.GcpClient{
-		App:    "crowemi-go-utils",
+	client := &cloud_storage.Client{
 		Config: config,
 	}
 	return client
@@ -18,7 +17,7 @@ func setup() *cloud.GcpClient {
 
 func TestLogMessage(t *testing.T) {
 	c := setup()
-	logger := Logger{GcpClient: c}
+	logger := Logger{CloudStorage: c}
 	id, err := logger.Log(
 		"Hello 👋 from crowemi-go-utils!",
 		INFO,

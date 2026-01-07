@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/crowemi-io/crowemi-go-utils/cloud"
+	"github.com/crowemi-io/crowemi-go-utils/storage/cloud_storage"
 )
 
 type Logger struct {
-	GcpClient *cloud.GcpClient
+	CloudStorage *cloud_storage.Client //TODO: this needs to be PubSub client
 }
 
 type LogLevel int
@@ -37,9 +37,9 @@ type LogMessage struct {
 }
 
 func (logger *Logger) Log(message string, level LogLevel, obj any, path string) (string, error) {
-	gcp := logger.GcpClient
+	cloudStorage := logger.CloudStorage
 	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, gcp.Config.ProjectID)
+	client, err := pubsub.NewClient(ctx, cloudStorage.Config.ProjectID)
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +47,7 @@ func (logger *Logger) Log(message string, level LogLevel, obj any, path string) 
 
 	logMessage := LogMessage{
 		CreatedAt: time.Now(),
-		App:       gcp.App,
+		App:       cloudStorage.Config.ProjectID,
 		Message:   message,
 		Level:     level.String(),
 		Obj:       obj,
@@ -58,7 +58,7 @@ func (logger *Logger) Log(message string, level LogLevel, obj any, path string) 
 		return "", err
 	}
 
-	topic := client.Topic(gcp.Config.PubSub.Topics["log"])
+	topic := client.Topic(cloudStorage.Config.PubSub.Topics["log"])
 	result := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte(m),
 	})
