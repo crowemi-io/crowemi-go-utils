@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"cloud.google.com/go/firestore"
 	"github.com/crowemi-io/crowemi-go-utils/config"
 	"github.com/crowemi-io/crowemi-go-utils/db"
 )
@@ -116,8 +115,8 @@ func TestFirestoreUpdateOne(t *testing.T) {
 	}
 	defer firestoreClient.Close()
 
-	updates := []firestore.Update{}
-	f := firestore.Update{
+	updates := []Update{}
+	f := Update{
 		Path:  "name",
 		Value: "John Doe",
 	}
