@@ -74,9 +74,9 @@ func DeleteOne(ctx context.Context, client *firestore.Client, collection string,
 	return ret, err
 }
 
-func GetMany[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (*[]T, error) {
+func GetMany[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (*map[string]T, error) {
 	// TODO: handle OR filters
-	var ret []T
+	ret := map[string]T{}
 	query := client.Collection(collection).Query
 	for _, f := range filters {
 		query = query.Where(f.Field, f.Operator, f.Value)
@@ -88,7 +88,7 @@ func GetMany[T any](ctx context.Context, client *firestore.Client, collection st
 	for _, doc := range docs {
 		var item T
 		doc.DataTo(&item)
-		ret = append(ret, item)
+		ret[doc.Ref.ID] = item
 	}
 	return &ret, nil
 }
