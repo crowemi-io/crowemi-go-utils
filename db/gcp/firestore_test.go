@@ -97,7 +97,7 @@ func TestFireststoreInsertOne(t *testing.T) {
 		Salary: 1000000,
 	}
 
-	ret, res, err := InsertOne[obj](context.TODO(), firestoreClient, "test", o)
+	ret, res, err := InsertOne(context.TODO(), firestoreClient, "test", o)
 	if err != nil {
 		t.Logf("Failed to insert one document to Firestore: %v", err)
 	}

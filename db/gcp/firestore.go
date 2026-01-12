@@ -45,7 +45,7 @@ func GetOne[T any](ctx context.Context, client *firestore.Client, collection str
 	doc.DataTo(&ret)
 	return &ret, err
 }
-func InsertOne[T any](ctx context.Context, client *firestore.Client, collection string, obj T) (*firestore.DocumentRef, *firestore.WriteResult, error) {
+func InsertOne(ctx context.Context, client *firestore.Client, collection string, obj any) (*firestore.DocumentRef, *firestore.WriteResult, error) {
 	ref, res, err := client.Collection(collection).Add(ctx, obj)
 	if err != nil {
 		return ref, res, err
