@@ -85,6 +85,12 @@ func GetMany[T any](ctx context.Context, client *firestore.Client, collection st
 	if err != nil {
 		return nil, err
 	}
+
+	// no records found
+	if len(docs) == 0 {
+		return nil, nil
+	}
+
 	for _, doc := range docs {
 		var item T
 		doc.DataTo(&item)

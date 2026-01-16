@@ -73,7 +73,7 @@ func TestFirestoreGetMany(t *testing.T) {
 	f := []db.Filter{}
 	f = append(f, db.Filter{Field: "date", Operator: "==", Value: "January 12, 2026"})
 
-	doc, err := GetMany[obj](context.TODO(), firestoreClient, "passages", f)
+	doc, err := GetMany[obj](context.TODO(), firestoreClient, "test", f)
 	if err != nil {
 		t.Errorf("Failed to get one document from Firestore: %v", err)
 	}
