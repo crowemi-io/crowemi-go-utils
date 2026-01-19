@@ -33,18 +33,18 @@ func (fc *Client) Connect(ctx context.Context, options ...ConnectOptions) (*fire
 	}
 	return client, err
 }
-func GetOneByID[T any](ctx context.Context, client *firestore.Client, collection string, id string) (*T, string, error) {
+func GetOneByID[T any](ctx context.Context, client *firestore.Client, collection string, id string) (*T, error) {
 	var ret T
 	doc, err := client.Collection(collection).Doc(id).Get(ctx)
 	if status.Code(err) == codes.NotFound {
 		// object not found
-		return &ret, "", nil
+		return &ret, nil
 	}
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	doc.DataTo(&ret)
-	return &ret, doc.Ref.ID, err
+	return &ret, err
 }
 func GetOne[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (*T, string, error) {
 	var ret T
