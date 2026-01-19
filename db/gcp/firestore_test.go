@@ -49,7 +49,7 @@ func TestFirestoreGetOne(t *testing.T) {
 	}
 	defer firestoreClient.Close()
 
-	doc, _, err := GetOneByID[obj](context.TODO(), firestoreClient, "test", "ZF52AXmmOMRfTamE4dEv")
+	doc, err := GetOneByID[obj](context.TODO(), firestoreClient, "test", "ZF52AXmmOMRfTamE4dEv")
 	if err != nil {
 		t.Errorf("Failed to get one document from Firestore: %v", err)
 	}
