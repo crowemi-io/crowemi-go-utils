@@ -33,17 +33,35 @@ func (fc *Client) Connect(ctx context.Context, options ...ConnectOptions) (*fire
 	}
 	return client, err
 }
-func GetOne[T any](ctx context.Context, client *firestore.Client, collection string, id string) (*T, error) {
+func GetOneByID[T any](ctx context.Context, client *firestore.Client, collection string, id string) (*T, string, error) {
 	var ret T
 	doc, err := client.Collection(collection).Doc(id).Get(ctx)
 	if status.Code(err) == codes.NotFound {
-		return nil, nil
+		// object not found
+		return &ret, "", nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	doc.DataTo(&ret)
-	return &ret, err
+	return &ret, doc.Ref.ID, err
+}
+func GetOne[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (*T, string, error) {
+	var ret T
+	query := client.Collection(collection).Query
+	for _, f := range filters {
+		query = query.Where(f.Field, f.Operator, f.Value)
+	}
+	docs, err := query.Documents(ctx).GetAll()
+	if err != nil {
+		return nil, "", err
+	}
+	if len(docs) == 0 {
+		return nil, "", nil
+	}
+	docs[0].DataTo(&ret)
+	id := docs[0].Ref.ID
+	return &ret, id, err
 }
 func InsertOne(ctx context.Context, client *firestore.Client, collection string, obj any) (*firestore.DocumentRef, *firestore.WriteResult, error) {
 	ref, res, err := client.Collection(collection).Add(ctx, obj)
@@ -74,7 +92,7 @@ func DeleteOne(ctx context.Context, client *firestore.Client, collection string,
 	return ret, err
 }
 
-func GetMany[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (*map[string]T, error) {
+func GetMany[T any](ctx context.Context, client *firestore.Client, collection string, filters []db.Filter) (map[string]T, error) {
 	// TODO: handle OR filters
 	ret := map[string]T{}
 	query := client.Collection(collection).Query
@@ -96,7 +114,7 @@ func GetMany[T any](ctx context.Context, client *firestore.Client, collection st
 		doc.DataTo(&item)
 		ret[doc.Ref.ID] = item
 	}
-	return &ret, nil
+	return ret, nil
 }
 func InsertMany[T any]() {}
 func UpdateMany[T any]() {}
